@@ -1950,4 +1950,48 @@ if (geofenceUtil.isHoliday(date, holidays)) {
         }
     }
 }
+
+    //new method2//
+    @Transactional
+public void backfillStudentAttendance(User student) {
+    if (student.getCollege() == null) return;
+    
+    LocalDate today = LocalDate.now();
+    LocalDate startDate = today.minusDays(90);
+    College college = student.getCollege();
+    List<CollegeHoliday> holidays = holidayRepo.findByCollegeId(college.getId());
+
+    for (LocalDate date = startDate; date.isBefore(today); date = date.plusDays(1)) {
+        boolean exists = attendanceDayRepo
+                .findByStudentIdAndDate(student.getId(), date).isPresent();
+        if (exists) continue;
+
+        AttendanceDay record = new AttendanceDay();
+        record.setStudent(student);
+        record.setCollege(college);
+        record.setDate(date);
+        record.setMonth(date.getMonthValue());
+        record.setYear(date.getYear());
+        record.setDayOfMonth(date.getDayOfMonth());
+
+        if (geofenceUtil.isWeekend(date)) {
+            record.setStatus(AttendanceStatus.W);
+        } else if (geofenceUtil.isHoliday(date, holidays)) {
+            record.setStatus(AttendanceStatus.H);
+        } else {
+            record.setStatus(AttendanceStatus.A);
+        }
+        attendanceDayRepo.save(record);
+    }
+    // Recalculate all months for this student
+    updateMonthlySummary(student.getId(), college.getId(),
+            today.getMonthValue(), today.getYear());
+    // Also previous month
+    LocalDate prevMonth = today.minusMonths(1);
+    updateMonthlySummary(student.getId(), college.getId(),
+            prevMonth.getMonthValue(), prevMonth.getYear());
+            
+    System.out.println("Backfilled attendance for new student: " + student.getName());
+}
+    
 }
