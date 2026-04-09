@@ -34,4 +34,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countByRoleAndIsActiveTrue(Role role);
 
     long countByIsApprovedFalseAndRoleNot(Role role);
+
+    List<User> findByRoleAndIsApprovedAndIsActive(Role role, Boolean isApproved, Boolean isActive);
 }
