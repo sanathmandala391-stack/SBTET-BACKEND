@@ -36,7 +36,7 @@ package com.sbtetAttendance.sbtet.service;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
-
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 @Service
 public class SchedulerService {
 
