@@ -1877,4 +1877,58 @@ public void recalculateAllSummaries() {
     }
     System.out.println("Recalculated summaries for " + allStudents.size() + " students.");
 }
+    @Transactional
+public void recalculateAllSummaries() {
+    LocalDate today = LocalDate.now();
+    List<User> allStudents = userRepo.findByRoleAndIsApprovedAndIsActive(
+            Role.STUDENT, true, true);
+    for (User student : allStudents) {
+        if (student.getCollege() != null) {
+            updateMonthlySummary(
+                student.getId(),
+                student.getCollege().getId(),
+                today.getMonthValue(),
+                today.getYear()
+            );
+        }
+    }
+    System.out.println("Recalculated summaries for " + allStudents.size() + " students.");
+}
+
+@Transactional
+public void fixAllMissingPastDates() {
+    LocalDate today = LocalDate.now();
+    LocalDate startDate = today.minusDays(90);
+
+    List<College> colleges = collegeRepo.findByIsActiveTrueOrderByCreatedAtDesc();
+    for (College college : colleges) {
+        List<CollegeHoliday> holidays = holidayRepo.findByCollegeId(college.getId());
+        List<User> students = userRepo.findByCollegeIdAndRoleAndIsApprovedAndIsActive(
+                college.getId(), Role.STUDENT, true, true);
+
+        for (LocalDate date = startDate; date.isBefore(today); date = date.plusDays(1)) {
+            if (geofenceUtil.isWeekend(date) || geofenceUtil.isHoliday(date, holidays)) continue;
+
+            for (User student : students) {
+                boolean exists = attendanceDayRepo
+                        .findByStudentIdAndDate(student.getId(), date).isPresent();
+                if (!exists) {
+                    AttendanceDay absent = new AttendanceDay();
+                    absent.setStudent(student);
+                    absent.setCollege(college);
+                    absent.setDate(date);
+                    absent.setStatus(AttendanceStatus.A);
+                    absent.setMonth(date.getMonthValue());
+                    absent.setYear(date.getYear());
+                    absent.setDayOfMonth(date.getDayOfMonth());
+                    attendanceDayRepo.save(absent);
+                }
+            }
+            for (User student : students) {
+                updateMonthlySummary(student.getId(), college.getId(),
+                        date.getMonthValue(), date.getYear());
+            }
+        }
+    }
+}
 }
