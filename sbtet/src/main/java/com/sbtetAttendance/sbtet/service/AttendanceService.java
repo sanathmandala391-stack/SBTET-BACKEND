@@ -1890,7 +1890,43 @@ public void fixAllMissingPastDates() {
                 college.getId(), Role.STUDENT, true, true);
 
         for (LocalDate date = startDate; date.isBefore(today); date = date.plusDays(1)) {
-            if (geofenceUtil.isWeekend(date) || geofenceUtil.isHoliday(date, holidays)) continue;
+        // FIXED - marks W for weekends, H for holidays
+if (geofenceUtil.isWeekend(date)) {
+    for (User student : students) {
+        boolean exists = attendanceDayRepo
+                .findByStudentIdAndDate(student.getId(), date).isPresent();
+        if (!exists) {
+            AttendanceDay wd = new AttendanceDay();
+            wd.setStudent(student);
+            wd.setCollege(college);
+            wd.setDate(date);
+            wd.setStatus(AttendanceStatus.W);
+            wd.setMonth(date.getMonthValue());
+            wd.setYear(date.getYear());
+            wd.setDayOfMonth(date.getDayOfMonth());
+            attendanceDayRepo.save(wd);
+        }
+    }
+    continue;
+}
+if (geofenceUtil.isHoliday(date, holidays)) {
+    for (User student : students) {
+        boolean exists = attendanceDayRepo
+                .findByStudentIdAndDate(student.getId(), date).isPresent();
+        if (!exists) {
+            AttendanceDay hd = new AttendanceDay();
+            hd.setStudent(student);
+            hd.setCollege(college);
+            hd.setDate(date);
+            hd.setStatus(AttendanceStatus.H);
+            hd.setMonth(date.getMonthValue());
+            hd.setYear(date.getYear());
+            hd.setDayOfMonth(date.getDayOfMonth());
+            attendanceDayRepo.save(hd);
+        }
+    }
+    continue;
+}
 
             for (User student : students) {
                 boolean exists = attendanceDayRepo
