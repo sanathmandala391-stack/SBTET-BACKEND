@@ -4,6 +4,7 @@ package com.sbtetAttendance.sbtet.service;
 
 import com.sbtetAttendance.sbtet.model.*;
 import com.sbtetAttendance.sbtet.Repository.*;
+import com.sbtetAttendance.sbtet.Service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +19,7 @@ public class AdminService {
     @Autowired private UserRepository userRepo;
     @Autowired private CollegeHolidayRepository holidayRepo;
     @Autowired private AttendanceDayRepository attendanceDayRepo;
-
+   @Autowired private AttendanceService attendanceService;
     @Transactional
     public College registerCollege(Map<String, Object> body, User registeredBy) {
         String code = ((String) body.get("collegeCode")).toUpperCase();
@@ -97,13 +98,28 @@ public class AdminService {
         return stats;
     }
 
-    @Transactional
-    public void updateUserApproval(Long userId, boolean isApproved) {
-        User user = userRepo.findById(userId).orElseThrow(() -> new NoSuchElementException("User not found."));
-        user.setApproved(isApproved);
-        userRepo.save(user);
-    }
+    //@Transactional
+    //public void updateUserApproval(Long userId, boolean isApproved) {
+      //  User user = userRepo.findById(userId).orElseThrow(() -> new NoSuchElementException("User not found."));
+     //   user.setApproved(isApproved);
+       // userRepo.save(user);
+  //  }
 
+
+    // Find this method and add backfill after saving
+public void updateUserApproval(Long userId, Boolean isApproved) {
+    User user = userRepo.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found."));
+    user.setApproved(isApproved);
+    userRepo.save(user);
+    
+    // NEW: If student just got approved, backfill their past attendance
+    if (isApproved && user.getRole() == Role.STUDENT) {
+        attendanceService.backfillStudentAttendance(user);
+    }
+}
+
+    
     public List<User> getPendingApprovals() {
         return userRepo.findByIsApprovedFalseAndRoleNot(Role.ADMIN);
     }
