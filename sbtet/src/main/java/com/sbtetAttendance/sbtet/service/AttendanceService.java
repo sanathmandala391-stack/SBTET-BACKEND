@@ -1855,4 +1855,26 @@ public class AttendanceService {
             }
         }
     }
+
+
+    //New method//
+
+    @Transactional
+public void recalculateAllSummaries() {
+    // Get all students and recalculate their monthly summaries
+    List<User> allStudents = userRepo.findByRoleAndIsApprovedAndIsActive(
+            Role.STUDENT, true, true);
+    LocalDate today = LocalDate.now();
+    for (User student : allStudents) {
+        if (student.getCollege() != null) {
+            updateMonthlySummary(
+                student.getId(),
+                student.getCollege().getId(),
+                today.getMonthValue(),
+                today.getYear()
+            );
+        }
+    }
+    System.out.println("Recalculated summaries for " + allStudents.size() + " students.");
+}
 }
