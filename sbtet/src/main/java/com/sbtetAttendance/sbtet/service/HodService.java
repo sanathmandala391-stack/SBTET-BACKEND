@@ -133,7 +133,7 @@ package com.sbtetAttendance.sbtet.service;
 
 import com.sbtetAttendance.sbtet.model.*;
 import com.sbtetAttendance.sbtet.Repository.*;
-import com.sbtetAttendance.sbtet.Service.*;
+import com.sbtetAttendance.sbtet.service.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -148,8 +148,7 @@ public class HodService {
     private final AttendanceDayRepository attendanceDayRepo;
     private final AttendanceSummaryRepository summaryRepo;
     private final AttendanceService attendanceService;
-    @Autowired
-    private AttendanceService attendanceService;
+
 
     public HodService(UserRepository userRepo,
                       AttendanceDayRepository attendanceDayRepo,
