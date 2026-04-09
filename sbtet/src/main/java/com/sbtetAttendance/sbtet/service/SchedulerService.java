@@ -34,6 +34,7 @@
 package com.sbtetAttendance.sbtet.service;
 
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -64,6 +65,15 @@ public class SchedulerService {
             System.out.println("Morning recalculation done at 5:00 AM.");
         } catch (Exception e) {
             System.err.println("Morning cron error: " + e.getMessage());
+        }
+    }
+            @EventListener(ApplicationReadyEvent.class)
+    public void fixMissingPastAttendance() {
+        try {
+            attendanceService.fixAllMissingPastDates();
+            System.out.println("Past attendance fix completed on startup.");
+        } catch (Exception e) {
+            System.err.println("Past fix error: " + e.getMessage());
         }
     }
 }
