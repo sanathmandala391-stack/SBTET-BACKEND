@@ -1877,23 +1877,6 @@ public void recalculateAllSummaries() {
     }
     System.out.println("Recalculated summaries for " + allStudents.size() + " students.");
 }
-    @Transactional
-public void recalculateAllSummaries() {
-    LocalDate today = LocalDate.now();
-    List<User> allStudents = userRepo.findByRoleAndIsApprovedAndIsActive(
-            Role.STUDENT, true, true);
-    for (User student : allStudents) {
-        if (student.getCollege() != null) {
-            updateMonthlySummary(
-                student.getId(),
-                student.getCollege().getId(),
-                today.getMonthValue(),
-                today.getYear()
-            );
-        }
-    }
-    System.out.println("Recalculated summaries for " + allStudents.size() + " students.");
-}
 
 @Transactional
 public void fixAllMissingPastDates() {
