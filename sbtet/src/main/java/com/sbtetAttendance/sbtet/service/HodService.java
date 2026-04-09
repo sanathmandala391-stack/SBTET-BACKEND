@@ -308,26 +308,40 @@ public class HodService {
     // ------------------------------------------------------------------ //
     //  Approve user — enforce department check for students
     // ------------------------------------------------------------------ //
-    @Transactional
-    public void approveUser(User hod, Long userId, boolean isApproved) {
-        User user = userRepo.findById(userId)
-                .orElseThrow(() -> new NoSuchElementException("User not found."));
+    //@Transactional
+    //public void approveUser(User hod, Long userId, boolean isApproved) {
+        //User user = userRepo.findById(userId)
+        //   .orElseThrow(() -> new NoSuchElementException("User not found."));
 
         // Must be in same college
-        if (!user.getCollege().getId().equals(hod.getCollege().getId()))
-            throw new SecurityException("Can only manage users in your college.");
+     //   if (!user.getCollege().getId().equals(hod.getCollege().getId()))
+       //     throw new SecurityException("Can only manage users in your college.");
 
         // For students: enforce same branch as HOD's department
-        if (user.getRole() == Role.STUDENT) {
-            String hodBranch = hodDepartmentToBranch(hod.getDepartment());
-            if (hodBranch != null && !hodBranch.equalsIgnoreCase(user.getBranch())) {
-                throw new SecurityException(
-                        "You can only approve students from your department (" + hodBranch + ").");
-            }
-        }
+       // if (user.getRole() == Role.STUDENT) {
+        //    String hodBranch = hodDepartmentToBranch(hod.getDepartment());
+         //   if (hodBranch != null && !hodBranch.equalsIgnoreCase(user.getBranch())) {
+              //  throw new SecurityException(
+               //   "You can only approve students from your department (" + hodBranch + ").");
+        //    }
+    //    }
 
-        user.setApproved(isApproved);
-        userRepo.save(user);
+    //    user.setApproved(isApproved);
+    //    userRepo.save(user);
+//    }
+
+
+    //new Second method//
+    public void approveUser(User hod, Long userId, Boolean isApproved) {
+    User user = userRepo.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found."));
+    user.setApproved(isApproved);
+    userRepo.save(user);
+
+    // NEW: If student just got approved, backfill their past attendance
+    if (isApproved && user.getRole() == Role.STUDENT) {
+        attendanceService.backfillStudentAttendance(user);
+    }
     }
 
     // ------------------------------------------------------------------ //
